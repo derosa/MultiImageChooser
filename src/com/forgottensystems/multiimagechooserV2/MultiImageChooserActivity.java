@@ -96,14 +96,15 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		LoaderManager.enableDebugLogging(true);
 		getSupportLoaderManager().initLoader(CURSORLOADER_THUMBS, null, this);
 		getSupportLoaderManager().initLoader(CURSORLOADER_REAL, null, this);
-		
-		StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-		double sdAvailSize = (double)stat.getAvailableBlocks()
-		                   * (double)stat.getBlockSize();
-		//One binary gigabyte equals 1,073,741,824 bytes.
-		double gigaAvailable = sdAvailSize / 1073741824 * 1024;
 
-		Log.d(TAG, "Free space in MB: " + gigaAvailable);
+		StatFs stat = new StatFs(Environment.getExternalStorageDirectory()
+				.getPath());
+		double sdAvailSize = (double) stat.getAvailableBlocks()
+				* (double) stat.getBlockSize();
+		// One binary gigabyte equals 1,073,741,824 bytes.
+		// double gigaAvailable = sdAvailSize / 1073741824 * 1024;
+		//
+		// Log.d(TAG, "Free space in MB: " + gigaAvailable);
 	}
 
 	private void updateLabel() {
@@ -120,7 +121,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 	}
 
 	public class ImageAdapter extends BaseAdapter {
-		// private final int BASE_SIZE = 128;
 		private final Matrix m = new Matrix();
 		private Canvas canvas;
 
@@ -157,24 +157,21 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 			imageView.setImageBitmap(null);
 
 			if (!imagecursor.moveToPosition(position)) {
-				Log.d("Collage", "moveToPosition was false");
 				return imageView;
 			}
 
 			if (image_column_index == -1) {
-				Log.d("Collage", "image_column_index == -1!");
 				return imageView;
 			}
 
 			int id = imagecursor.getInt(image_column_index);
 
-			Bitmap eso = MediaStore.Images.Thumbnails.getThumbnail(
+			Bitmap thumb = MediaStore.Images.Thumbnails.getThumbnail(
 					getContentResolver(), id,
 					MediaStore.Images.Thumbnails.MICRO_KIND, null);
 
-			if (eso == null) {
-				// Ya no existe la imagen original de la miniatura, se oculta
-				// esta vista:
+			if (thumb == null) {
+				// The original image no longer exists, hide the image cell
 				imageView.setVisibility(View.GONE);
 				imageView.setClickable(false);
 				imageView.setEnabled(false);
@@ -182,18 +179,18 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 			}
 
 			Bitmap mutable = Bitmap.createBitmap(colWidth, colWidth,
-					eso.getConfig());
+					thumb.getConfig());
 
 			canvas = new Canvas(mutable);
 
-			RectF src = new RectF(0, 0, eso.getWidth(), eso.getHeight());
+			RectF src = new RectF(0, 0, thumb.getWidth(), thumb.getHeight());
 			RectF dst = new RectF(0, 0, canvas.getWidth(), canvas.getHeight());
 			m.reset();
 			m.setRectToRect(src, dst, Matrix.ScaleToFit.CENTER);
-			canvas.drawBitmap(eso, m, null);
+			canvas.drawBitmap(thumb, m, null);
 
-			eso.recycle();
-			eso = null;
+			thumb.recycle();
+			thumb = null;
 
 			if (isChecked(position)) {
 				imageView.setBackgroundColor(Color.RED);
@@ -222,7 +219,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 	}
 
 	public boolean isChecked(int position) {
-
 		boolean ret = checkStatus.get(position);
 		return ret;
 	}
