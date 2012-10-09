@@ -1,4 +1,4 @@
-lt application files
+# built application files
 *.apk
 *.ap_
 
@@ -18,3 +18,7 @@ local.properties
 # Eclipse project files
 .classpath
 .project
+
+
+# Old .svn repo
+.svn/
