@@ -97,10 +97,10 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		getSupportLoaderManager().initLoader(CURSORLOADER_THUMBS, null, this);
 		getSupportLoaderManager().initLoader(CURSORLOADER_REAL, null, this);
 
-		StatFs stat = new StatFs(Environment.getExternalStorageDirectory()
-				.getPath());
-		double sdAvailSize = (double) stat.getAvailableBlocks()
-				* (double) stat.getBlockSize();
+		// StatFs stat = new StatFs(Environment.getExternalStorageDirectory()
+		// .getPath());
+		// double sdAvailSize = (double) stat.getAvailableBlocks()
+		// * (double) stat.getBlockSize();
 		// One binary gigabyte equals 1,073,741,824 bytes.
 		// double gigaAvailable = sdAvailSize / 1073741824 * 1024;
 		//
