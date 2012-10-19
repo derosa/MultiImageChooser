@@ -14,7 +14,6 @@ import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.StatFs;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
@@ -23,6 +22,7 @@ import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -81,6 +81,13 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		}
 
 		acceptButton = (Button) findViewById(R.id.btn_select);
+		acceptButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				selectClicked(v);
+			}
+		});
 
 		colWidth = getIntent().getIntExtra(COL_WIDTH_KEY, DEFAULT_COLUMN_WIDTH);
 		int bgColor = getIntent().getIntExtra("BG_COLOR", Color.BLACK);

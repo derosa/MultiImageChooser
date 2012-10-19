@@ -3,7 +3,6 @@
     android:layout_height="fill_parent"
     android:layout_width="fill_parent"
     android:orientation="vertical" > <!-- android:background="@drawable/image_bg" -->
-
     <TextView
         android:gravity="center"
         android:id="@+id/label_images_left"
@@ -41,20 +40,11 @@
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:orientation="horizontal"
-        android:paddingTop="3dip"
-        android:weightSum="1" >
-        <Button
-            android:id="@+id/btn_cancel"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:layout_width="fill_parent"
-            android:onClick="cancelClicked"
-            android:text="@android:string/cancel" />
+        android:paddingTop="3dip" >
         <Button
             android:enabled="false"
             android:id="@+id/btn_select"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
             android:layout_width="fill_parent"
             android:onClick="selectClicked"
             android:text="@android:string/ok" />
