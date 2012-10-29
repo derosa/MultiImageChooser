@@ -46,7 +46,6 @@
             android:id="@+id/btn_select"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
-            android:onClick="selectClicked"
             android:text="@android:string/ok" />
     </LinearLayout>
 </LinearLayout>
