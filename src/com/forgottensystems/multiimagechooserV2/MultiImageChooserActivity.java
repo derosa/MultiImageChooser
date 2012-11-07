@@ -1,13 +1,17 @@
 package com.forgottensystems.multiimagechooserV2;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -24,6 +28,8 @@ import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
@@ -65,10 +71,14 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 
 	private GridView gridView;
 
+	private ExecutorService executor;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.multiselectorgrid);
+
+		executor = Executors.newFixedThreadPool(20);
 		fileNames.clear();
 
 		maxImages = getIntent().getIntExtra(MAX_IMAGES_KEY, NOLIMIT);
@@ -104,14 +114,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		getSupportLoaderManager().initLoader(CURSORLOADER_THUMBS, null, this);
 		getSupportLoaderManager().initLoader(CURSORLOADER_REAL, null, this);
 
-		// StatFs stat = new StatFs(Environment.getExternalStorageDirectory()
-		// .getPath());
-		// double sdAvailSize = (double) stat.getAvailableBlocks()
-		// * (double) stat.getBlockSize();
-		// One binary gigabyte equals 1,073,741,824 bytes.
-		// double gigaAvailable = sdAvailSize / 1073741824 * 1024;
-		//
-		// Log.d(TAG, "Free space in MB: " + gigaAvailable);
 	}
 
 	private void updateLabel() {
@@ -130,8 +132,11 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 	public class ImageAdapter extends BaseAdapter {
 		private final Matrix m = new Matrix();
 		private Canvas canvas;
+		private Bitmap mPlaceHolderBitmap;
 
 		public ImageAdapter(Context c) {
+			mPlaceHolderBitmap = BitmapFactory.decodeResource(getResources(),
+					R.drawable.icon);
 		}
 
 		public int getCount() {
@@ -151,17 +156,17 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		}
 
 		// create a new ImageView for each item referenced by the Adapter
-		public View getView(int position, View convertView, ViewGroup parent) {
-
-			ImageView imageView = null;
+		public View getView(int pos, View convertView, ViewGroup parent) {
 
 			if (convertView == null) {
-				imageView = new ImageView(MultiImageChooserActivity.this);
-			} else {
-				imageView = (ImageView) convertView;
+				convertView = new ImageView(MultiImageChooserActivity.this);
 			}
+
+			ImageView imageView = (ImageView) convertView;
+			final int position = pos;
+
 			imageView.setBackgroundColor(Color.TRANSPARENT);
-			imageView.setImageBitmap(null);
+			imageView.setImageBitmap(mPlaceHolderBitmap);
 
 			if (!imagecursor.moveToPosition(position)) {
 				return imageView;
@@ -171,39 +176,102 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 				return imageView;
 			}
 
-			int id = imagecursor.getInt(image_column_index);
+			final int id = imagecursor.getInt(image_column_index);
 
-			Bitmap thumb = MediaStore.Images.Thumbnails.getThumbnail(
-					getContentResolver(), id,
-					MediaStore.Images.Thumbnails.MICRO_KIND, null);
+			imageView.setImageBitmap(mPlaceHolderBitmap);
+			final WeakReference<ImageView> ivRef = new WeakReference<ImageView>(
+					imageView);
 
-			if (thumb == null) {
-				// The original image no longer exists, hide the image cell
-				imageView.setVisibility(View.GONE);
-				imageView.setClickable(false);
-				imageView.setEnabled(false);
-				return imageView;
-			}
+			Runnable theRunnable = new Runnable() {
 
-			Bitmap mutable = Bitmap.createBitmap(colWidth, colWidth,
-					thumb.getConfig());
+				private void setInvisible() {
+					if (ivRef.get() == null) {
+						return;
+					} else {
+						final ImageView iv = (ImageView) ivRef.get();
+						if (iv == null) {
+							return;
+						} else {
+							MultiImageChooserActivity.this
+									.runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											iv.setVisibility(View.GONE);
+											iv.setClickable(false);
+											iv.setEnabled(false);
+										}
+									});
+						}
+					}
+				}
 
-			canvas = new Canvas(mutable);
+				@Override
+				public void run() {
+					Bitmap thumb = MediaStore.Images.Thumbnails.getThumbnail(
+							getContentResolver(), id,
+							MediaStore.Images.Thumbnails.MICRO_KIND, null);
 
-			RectF src = new RectF(0, 0, thumb.getWidth(), thumb.getHeight());
-			RectF dst = new RectF(0, 0, canvas.getWidth(), canvas.getHeight());
-			m.reset();
-			m.setRectToRect(src, dst, Matrix.ScaleToFit.CENTER);
-			canvas.drawBitmap(thumb, m, null);
+					if (thumb == null) {
+						// The original image no longer exists, hide the image
+						// cell
+						setInvisible();
+						return;
+					} else {
+						final Bitmap mutable = Bitmap.createBitmap(colWidth,
+								colWidth, thumb.getConfig());
+						if (mutable == null) {
+							setInvisible();
+							return;
+						}
+						canvas = new Canvas(mutable);
+						if (canvas == null) {
+							setInvisible();
+							return;
+						}
 
-			thumb.recycle();
-			thumb = null;
+						RectF src = new RectF(0, 0, thumb.getWidth(),
+								thumb.getHeight());
+						RectF dst = new RectF(0, 0, canvas.getWidth(),
+								canvas.getHeight());
+						m.reset();
+						m.setRectToRect(src, dst, Matrix.ScaleToFit.CENTER);
+						canvas.drawBitmap(thumb, m, null);
 
-			if (isChecked(position)) {
-				imageView.setBackgroundColor(Color.RED);
-			}
+						thumb.recycle();
+						thumb = null;
 
-			imageView.setImageBitmap(mutable);
+						MultiImageChooserActivity.this
+								.runOnUiThread(new Runnable() {
+									@Override
+									public void run() {
+										if (ivRef.get() == null) {
+											return;
+										} else {
+											final ImageView iv = (ImageView) ivRef
+													.get();
+											if (iv == null) {
+												return;
+											} else {
+												if (isChecked(position)) {
+													iv.setBackgroundColor(Color.RED);
+												}
+												iv.setImageBitmap(mutable);
+												Animation anim = AnimationUtils
+														.loadAnimation(
+																MultiImageChooserActivity.this,
+																android.R.anim.fade_in);
+												iv.setAnimation(anim);
+												anim.start();
+											}
+										}
+
+									}
+								});
+					}
+				}
+			};
+
+			executor.execute(theRunnable);
 
 			return imageView;
 		}
