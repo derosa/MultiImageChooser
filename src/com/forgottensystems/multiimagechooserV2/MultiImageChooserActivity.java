@@ -25,6 +25,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.view.Display;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -78,7 +79,7 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.multiselectorgrid);
 
-		executor = Executors.newFixedThreadPool(20);
+		executor = Executors.newCachedThreadPool();
 		fileNames.clear();
 
 		maxImages = getIntent().getIntExtra(MAX_IMAGES_KEY, NOLIMIT);
@@ -100,6 +101,16 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		});
 
 		colWidth = getIntent().getIntExtra(COL_WIDTH_KEY, DEFAULT_COLUMN_WIDTH);
+
+		Display display = getWindowManager().getDefaultDisplay();
+		@SuppressWarnings("deprecation")
+		int width = display.getWidth();
+		int testColWidth = width / 3;
+
+		if (testColWidth > colWidth) {
+			colWidth = width / 4;
+		}
+
 		int bgColor = getIntent().getIntExtra("BG_COLOR", Color.BLACK);
 
 		gridView = (GridView) findViewById(R.id.gridview);
@@ -110,7 +121,7 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		ia = new ImageAdapter(this);
 		gridView.setAdapter(ia);
 
-		LoaderManager.enableDebugLogging(true);
+		LoaderManager.enableDebugLogging(false);
 		getSupportLoaderManager().initLoader(CURSORLOADER_THUMBS, null, this);
 		getSupportLoaderManager().initLoader(CURSORLOADER_REAL, null, this);
 
@@ -132,11 +143,17 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 	public class ImageAdapter extends BaseAdapter {
 		private final Matrix m = new Matrix();
 		private Canvas canvas;
-		private Bitmap mPlaceHolderBitmap;
+		private final Bitmap mPlaceHolderBitmap;
 
 		public ImageAdapter(Context c) {
-			mPlaceHolderBitmap = BitmapFactory.decodeResource(getResources(),
-					R.drawable.icon);
+			Bitmap tmpHolderBitmap = BitmapFactory.decodeResource(
+					getResources(), R.drawable.loading_icon);
+			mPlaceHolderBitmap = Bitmap.createScaledBitmap(tmpHolderBitmap,
+					colWidth, colWidth, false);
+			if (tmpHolderBitmap != mPlaceHolderBitmap) {
+				tmpHolderBitmap.recycle();
+				tmpHolderBitmap = null;
+			}
 		}
 
 		public int getCount() {
@@ -245,6 +262,7 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 									@Override
 									public void run() {
 										if (ivRef.get() == null) {
+
 											return;
 										} else {
 											final ImageView iv = (ImageView) ivRef
@@ -260,8 +278,8 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 														.loadAnimation(
 																MultiImageChooserActivity.this,
 																android.R.anim.fade_in);
-												iv.setAnimation(anim);
-												anim.start();
+												// iv.setAnimation(anim);
+												// anim.start();
 											}
 										}
 
@@ -271,7 +289,8 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 				}
 			};
 
-			executor.execute(theRunnable);
+			new Thread(theRunnable).start();
+			// executor.execute(theRunnable);
 
 			return imageView;
 		}
@@ -314,7 +333,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 		Intent data = new Intent();
 		data.putExtras(res);
 		this.setResult(RESULT_OK, data);
-		Log.d(TAG, "Images: " + al.toString());
 
 		finish();
 	}
@@ -328,9 +346,10 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 			return;
 		}
 		boolean isChecked = !isChecked(position);
-		// Log.d("DAVID", "Posicion " + position + " isChecked: " + isChecked);
+		// PhotoMix.Log("DAVID", "Posicion " + position + " isChecked: " +
+		// isChecked);
 		if (!unlimitedImages && maxImages == 0 && isChecked) {
-			// Log.d("DAVID", "Aquí no debería entrar...");
+			// PhotoMix.Log("DAVID", "Aquí no debería entrar...");
 			isChecked = false;
 		}
 
@@ -358,7 +377,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int cursorID, Bundle arg1) {
-		Log.d(TAG, "onCreateLoader: " + cursorID);
 		CursorLoader cl = null;
 
 		ArrayList<String> img = new ArrayList<String>();
@@ -374,8 +392,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 			break;
 		}
 
-		Log.d(TAG, "Schema: " + MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
 		cl = new CursorLoader(MultiImageChooserActivity.this,
 				MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 				img.toArray(new String[img.size()]), null, null, null);
@@ -384,18 +400,8 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-		Log.d(TAG, "onLoadFinished: " + loader.getId());
-		Log.d(TAG,
-				"Is the SD card mounted? "
-						+ Environment.MEDIA_MOUNTED.equals(Environment
-								.getExternalStorageState()));
-		if (cursor != null) {
-			Log.d(TAG,
-					"Cursor: " + cursor.toString() + "; items: "
-							+ cursor.getCount());
-		} else {
-			Log.d(TAG,
-					"NULL cursor. This usually means there's no image database yet....");
+		if (cursor == null) {
+			// NULL cursor. This usually means there's no image database yet....
 			return;
 		}
 
@@ -418,7 +424,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader) {
-		Log.d(TAG, "onLoaderReset: " + loader.getId());
 		if (loader.getId() == CURSORLOADER_THUMBS) {
 			imagecursor = null;
 		} else if (loader.getId() == CURSORLOADER_REAL) {
