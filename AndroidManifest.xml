@@ -4,15 +4,15 @@
       android:versionCode="1"
       android:versionName="1.0">
     <uses-sdk android:targetSdkVersion="15" android:minSdkVersion="7"></uses-sdk>
-    <application android:icon="@drawable/icon" android:label="@string/multi_app_name" android:theme="@style/MyTheme">
-        <activity android:label="@string/multi_app_name" android:name=".MultiImageChooserActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+<!--     <application android:icon="@drawable/icon" android:label="@string/multi_app_name" android:theme="@style/MyTheme"> -->
+<!--         <activity android:label="@string/multi_app_name" android:name=".MultiImageChooserActivity"> -->
+<!--             <intent-filter> -->
+<!--                 <action android:name="android.intent.action.MAIN" /> -->
+<!--                 <category android:name="android.intent.category.LAUNCHER" /> -->
+<!--             </intent-filter> -->
+<!--         </activity> -->
 
-    </application>
+<!--     </application> -->
 
 
 </manifest> 
