@@ -262,7 +262,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 									@Override
 									public void run() {
 										if (ivRef.get() == null) {
-
 											return;
 										} else {
 											final ImageView iv = (ImageView) ivRef
@@ -274,15 +273,8 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 													iv.setBackgroundColor(Color.RED);
 												}
 												iv.setImageBitmap(mutable);
-												Animation anim = AnimationUtils
-														.loadAnimation(
-																MultiImageChooserActivity.this,
-																android.R.anim.fade_in);
-												// iv.setAnimation(anim);
-												// anim.start();
 											}
 										}
-
 									}
 								});
 					}
@@ -290,7 +282,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements
 			};
 
 			new Thread(theRunnable).start();
-			// executor.execute(theRunnable);
 
 			return imageView;
 		}
