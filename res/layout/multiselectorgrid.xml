@@ -20,7 +20,9 @@
     <!-- android:layout_height="2dip" -->
     <!-- android:background="#aaaaaaff" /> -->
     <GridView
-        android:columnWidth="100dip"
+        android:fadingEdgeLength="10dip"
+        android:requiresFadingEdge="vertical"
+        android:columnWidth="0dip"
         android:fastScrollEnabled="true"
         android:gravity="center"
         android:horizontalSpacing="8dip"
@@ -32,20 +34,15 @@
         android:scrollingCache="true"
         android:stretchMode="columnWidth"
         android:verticalSpacing="8dip" />
-    <View
-        android:background="#aaaaaaff"
-        android:layout_height="1dip"
-        android:layout_width="fill_parent" />
-    <LinearLayout
+<!--     <View -->
+<!--         android:background="#aaaaaaff" -->
+<!--         android:layout_height="1dip" -->
+<!--         android:layout_width="fill_parent" /> -->
+    <Button
+        android:enabled="false"
+        android:id="@+id/btn_select"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:orientation="horizontal"
-        android:paddingTop="3dip" >
-        <Button
-            android:enabled="false"
-            android:id="@+id/btn_select"
-            android:layout_height="wrap_content"
-            android:layout_width="fill_parent"
-            android:text="@android:string/ok" />
-    </LinearLayout>
+        android:paddingTop="3dip"
+        android:text="@android:string/ok" />
 </LinearLayout>
