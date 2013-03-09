@@ -12,27 +12,28 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MultiImageChooserActivity extends FragmentActivity implements OnItemClickListener,
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+
+public class MultiImageChooserActivity extends SherlockFragmentActivity implements OnItemClickListener,
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "Collage";
     public static final String COL_WIDTH_KEY = "COL_WIDTH";
@@ -58,7 +59,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements OnIte
 
     private SparseBooleanArray checkStatus = new SparseBooleanArray();
 
-    private Button acceptButton;
     private TextView freeLabel = null;
     private int maxImages;
     private boolean unlimitedImages = false;
@@ -84,15 +84,6 @@ public class MultiImageChooserActivity extends FragmentActivity implements OnIte
             freeLabel.setVisibility(View.VISIBLE);
             updateLabel();
         }
-
-        acceptButton = (Button) findViewById(R.id.btn_select);
-        acceptButton.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                selectClicked(v);
-            }
-        });
 
         colWidth = getIntent().getIntExtra(COL_WIDTH_KEY, DEFAULT_COLUMN_WIDTH);
 
@@ -141,7 +132,8 @@ public class MultiImageChooserActivity extends FragmentActivity implements OnIte
                 }
             }
         });
-        selectedColor = Color.RED;
+        selectedColor = 0xff32b2e1;
+        //selectedColor = Color.RED;
 
         // gridView.setBackgroundColor(bgColor);
         // gridView.setBackgroundResource(R.drawable.grid_background);
@@ -152,7 +144,38 @@ public class MultiImageChooserActivity extends FragmentActivity implements OnIte
         LoaderManager.enableDebugLogging(false);
         getSupportLoaderManager().initLoader(CURSORLOADER_THUMBS, null, this);
         getSupportLoaderManager().initLoader(CURSORLOADER_REAL, null, this);
+        setupHeader();
+        updateAcceptButton();
+    }
 
+    private void setupHeader() {
+        // From Roman Nurik's code
+        // https://plus.google.com/113735310430199015092/posts/R49wVvcDoEW
+        // Inflate a "Done/Discard" custom action bar view.
+        LayoutInflater inflater = (LayoutInflater) getSupportActionBar().getThemedContext().getSystemService(
+                LAYOUT_INFLATER_SERVICE);
+        final View customActionBarView = inflater.inflate(R.layout.actionbar_custom_view_done_discard, null);
+        customActionBarView.findViewById(R.id.actionbar_done).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // "Done"
+                selectClicked(null);
+            }
+        });
+        customActionBarView.findViewById(R.id.actionbar_discard).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        // Show the custom action bar view and hide the normal Home icon and
+        // title.
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM
+                | ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+        actionBar.setCustomView(customActionBarView, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
     private void updateLabel() {
@@ -256,17 +279,23 @@ public class MultiImageChooserActivity extends FragmentActivity implements OnIte
     }
 
     public void selectClicked(View ignored) {
-        ArrayList<String> al = new ArrayList<String>();
-        al.addAll(fileNames);
-        Bundle res = new Bundle();
-        res.putStringArrayList("MULTIPLEFILENAMES", al);
-        if (imagecursor != null) {
-            res.putInt("TOTALFILES", imagecursor.getCount());
-        }
         Intent data = new Intent();
-        data.putExtras(res);
-        this.setResult(RESULT_OK, data);
+        if (fileNames.isEmpty()) {
+            this.setResult(RESULT_CANCELED);
+        } else {
 
+            ArrayList<String> al = new ArrayList<String>();
+            al.addAll(fileNames);
+            Bundle res = new Bundle();
+            res.putStringArrayList("MULTIPLEFILENAMES", al);
+            if (imagecursor != null) {
+                res.putInt("TOTALFILES", imagecursor.getCount());
+            }
+
+            data.putExtras(res);
+            this.setResult(RESULT_OK, data);
+        }
+        Log.d(TAG, "Returning " + fileNames.size() + " items");
         finish();
     }
 
@@ -302,8 +331,15 @@ public class MultiImageChooserActivity extends FragmentActivity implements OnIte
         }
 
         setChecked(position, isChecked);
-        acceptButton.setEnabled(fileNames.size() != 0);
+        updateAcceptButton();
         updateLabel();
+
+    }
+
+    private void updateAcceptButton() {
+        ((TextView) getSupportActionBar().getCustomView().findViewById(R.id.actionbar_done_textview))
+                .setEnabled(fileNames.size() != 0);
+        getSupportActionBar().getCustomView().findViewById(R.id.actionbar_done).setEnabled(fileNames.size() != 0);
 
     }
 
