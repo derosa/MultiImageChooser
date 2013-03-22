@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -80,8 +81,6 @@ public class ImageFetcher {
      * used. Kept private at the moment as its interest is not clear.
      */
     private void forceDownload(Integer position, ImageView imageView) {
-        // State sanity: url is guaranteed to never be null in
-        // DownloadedDrawable and cache keys.
         if (position == null) {
             imageView.setImageDrawable(null);
             return;
@@ -96,7 +95,11 @@ public class ImageFetcher {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                 task.executeOnExecutor(executor, position);
             } else {
-                task.execute(position);
+                try {
+                    task.execute(position);
+                } catch (RejectedExecutionException e) {
+                    // Oh :(
+                }
             }
 
         }
@@ -120,7 +123,6 @@ public class ImageFetcher {
                         origId, 12345);
                 bitmapDownloaderTask.cancel(true);
             } else {
-                // The same URL is already being downloaded.
                 return false;
             }
         }
@@ -352,15 +354,15 @@ public class ImageFetcher {
      * after a certain inactivity delay.
      */
     public void clearCache() {
-//        sHardBitmapCache.clear();
-//        sSoftBitmapCache.clear();
+        // sHardBitmapCache.clear();
+        // sSoftBitmapCache.clear();
     }
 
     /**
      * Allow a new delay before the automatic cache clear is done.
      */
     private void resetPurgeTimer() {
-//        purgeHandler.removeCallbacks(purger);
-//        purgeHandler.postDelayed(purger, DELAY_BEFORE_PURGE);
+        // purgeHandler.removeCallbacks(purger);
+        // purgeHandler.postDelayed(purger, DELAY_BEFORE_PURGE);
     }
 }

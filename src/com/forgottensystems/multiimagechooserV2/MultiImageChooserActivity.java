@@ -73,6 +73,8 @@ public class MultiImageChooserActivity extends SherlockFragmentActivity implemen
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        int theme = getIntent().getIntExtra("THEME", R.style.CollageTheme);
+        setTheme(theme);
         setContentView(R.layout.multiselectorgrid);
         fileNames.clear();
 
@@ -123,17 +125,14 @@ public class MultiImageChooserActivity extends SherlockFragmentActivity implemen
                     lastFirstItem = firstVisibleItem;
                     timestamp = System.currentTimeMillis();
                     Log.d(TAG, "Speed: " + speed + " elements/second");
+
                     // Limitarlo si vamos a más de una página por segundo...
-                    if (speed > 10) {
-                        shouldRequestThumb = false;
-                    } else {
-                        shouldRequestThumb = true;
-                    }
+                    shouldRequestThumb = speed < visibleItemCount;
                 }
             }
         });
         selectedColor = 0xff32b2e1;
-        //selectedColor = Color.RED;
+        // selectedColor = Color.RED;
 
         // gridView.setBackgroundColor(bgColor);
         // gridView.setBackgroundResource(R.drawable.grid_background);
