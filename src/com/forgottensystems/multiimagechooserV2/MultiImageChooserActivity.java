@@ -73,8 +73,6 @@ public class MultiImageChooserActivity extends SherlockFragmentActivity implemen
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        int theme = getIntent().getIntExtra("THEME", R.style.CollageTheme);
-        setTheme(theme);
         setContentView(R.layout.multiselectorgrid);
         fileNames.clear();
 
