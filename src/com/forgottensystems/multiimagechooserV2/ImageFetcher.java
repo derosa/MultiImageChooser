@@ -32,7 +32,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -98,6 +97,7 @@ public class ImageFetcher {
                 try {
                     task.execute(position);
                 } catch (RejectedExecutionException e) {
+                    Log.d("ImageFetcher", "Not downloading: " + e.getMessage());
                     // Oh :(
                 }
             }
@@ -118,7 +118,7 @@ public class ImageFetcher {
         if (bitmapDownloaderTask != null) {
             Integer bitmapPosition = bitmapDownloaderTask.position;
             if ((bitmapPosition == null) || (!bitmapPosition.equals(position))) {
-                Log.d("DAVID", "Canceling...");
+//                Log.d("DAVID", "Canceling...");
                 MediaStore.Images.Thumbnails.cancelThumbnailRequest(imageView.getContext().getContentResolver(),
                         origId, 12345);
                 bitmapDownloaderTask.cancel(true);
@@ -197,7 +197,7 @@ public class ImageFetcher {
         }
 
         private void setInvisible() {
-            Log.d("COLLAGE", "Setting something invisible...");
+//            Log.d("COLLAGE", "Setting something invisible...");
             if (imageViewReference != null) {
                 final ImageView imageView = imageViewReference.get();
                 BitmapFetcherTask bitmapDownloaderTask = getBitmapDownloaderTask(imageView);
@@ -271,11 +271,16 @@ public class ImageFetcher {
      */
 
     private static final int HARD_CACHE_CAPACITY = 100;
-    private static final int DELAY_BEFORE_PURGE = 10 * 1000; // in milliseconds
+//    private static final int DELAY_BEFORE_PURGE = 10 * 1000; // in milliseconds
 
     // Hard cache, with a fixed maximum capacity and a life duration
     private final HashMap<Integer, Bitmap> sHardBitmapCache = new LinkedHashMap<Integer, Bitmap>(
             HARD_CACHE_CAPACITY / 2, 0.75f, true) {
+        /**
+                 * 
+                 */
+                private static final long serialVersionUID = 3333677999813172362L;
+
         @Override
         protected boolean removeEldestEntry(LinkedHashMap.Entry<Integer, Bitmap> eldest) {
             if (size() > HARD_CACHE_CAPACITY) {
@@ -292,13 +297,13 @@ public class ImageFetcher {
     private final static ConcurrentHashMap<Integer, SoftReference<Bitmap>> sSoftBitmapCache = new ConcurrentHashMap<Integer, SoftReference<Bitmap>>(
             HARD_CACHE_CAPACITY / 2);
 
-    private final Handler purgeHandler = new Handler();
+//    private final Handler purgeHandler = new Handler();
 
-    private final Runnable purger = new Runnable() {
-        public void run() {
-            clearCache();
-        }
-    };
+//    private final Runnable purger = new Runnable() {
+//        public void run() {
+//            clearCache();
+//        }
+//    };
 
     /**
      * Adds this bitmap to the cache.
@@ -324,7 +329,7 @@ public class ImageFetcher {
         synchronized (sHardBitmapCache) {
             final Bitmap bitmap = sHardBitmapCache.get(position);
             if (bitmap != null) {
-                Log.d("CACHE ****** ", "Hard hit!");
+//                Log.d("CACHE ****** ", "Hard hit!");
                 // Bitmap found in hard cache
                 // Move element to first position, so that it is removed last
                 return bitmap;
@@ -337,7 +342,7 @@ public class ImageFetcher {
             final Bitmap bitmap = bitmapReference.get();
             if (bitmap != null) {
                 // Bitmap found in soft cache
-                Log.d("CACHE ****** ", "Soft hit!");
+//                Log.d("CACHE ****** ", "Soft hit!");
                 return bitmap;
             } else {
                 // Soft reference has been Garbage Collected

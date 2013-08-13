@@ -11,9 +11,9 @@
         android:layout_width="fill_parent"
         android:paddingBottom="2dip"
         android:paddingTop="2dip"
-        android:text=""
         android:textSize="18sp"
         android:textStyle="bold"
+        android:textColor="#777"
         android:visibility="gone" />
     <GridView
         android:fadingEdgeLength="10dip"
@@ -21,7 +21,7 @@
         android:columnWidth="0dip"
         android:fastScrollEnabled="true"
         android:gravity="center"
-        android:horizontalSpacing="8dip"
+        android:horizontalSpacing="4dip"
         android:id="@+id/gridview"
         android:layout_height="fill_parent"
         android:layout_weight="1"
@@ -29,5 +29,5 @@
         android:numColumns="auto_fit"
         android:scrollingCache="true"
         android:stretchMode="columnWidth"
-        android:verticalSpacing="8dip" />
+        android:verticalSpacing="4dip" />
 </LinearLayout>

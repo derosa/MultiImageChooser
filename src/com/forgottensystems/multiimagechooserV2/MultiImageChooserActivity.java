@@ -10,6 +10,8 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.LoaderManager;
@@ -90,18 +92,19 @@ public class MultiImageChooserActivity extends SherlockFragmentActivity implemen
         colWidth = getIntent().getIntExtra(COL_WIDTH_KEY, DEFAULT_COLUMN_WIDTH);
 
         Display display = getWindowManager().getDefaultDisplay();
-        @SuppressWarnings("deprecation")
-        int width = display.getWidth();
-        int testColWidth = width / 3;
 
-        if (testColWidth > colWidth) {
-            colWidth = width / 4;
+        int width = 0;
+        if (Build.VERSION.SDK_INT >= 13) {
+            Point p = new Point();
+            display.getSize(p);
+            width = p.x;
+        } else {
+            width = display.getWidth();
         }
 
-        // int bgColor = getIntent().getIntExtra("BG_COLOR", Color.BLACK);
-
         gridView = (GridView) findViewById(R.id.gridview);
-        gridView.setColumnWidth(colWidth);
+        gridView.setColumnWidth(width / 3);
+        gridView.setNumColumns(3);
         gridView.setOnItemClickListener(this);
         gridView.setOnScrollListener(new OnScrollListener() {
 
@@ -184,7 +187,7 @@ public class MultiImageChooserActivity extends SherlockFragmentActivity implemen
             if (maxImages == 0) {
                 freeLabel.setTextColor(Color.RED);
             } else {
-                freeLabel.setTextColor(Color.WHITE);
+                freeLabel.setTextColor(0xff777777);
             }
         }
     }
